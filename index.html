@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+<meta name="theme-color" content="#171a2b" />
+<title>Word Quest Town｜高中英文單字任務城</title>
+<style>
+  :root{
+    --ink:#f7f8ff; --muted:#b7bfd9; --panel:#202641; --panel2:#2b3356;
+    --line:#49547e; --accent:#67e8f9; --accent2:#facc15; --good:#4ade80;
+    --bad:#fb7185; --purple:#a78bfa; --shadow:0 10px 30px rgba(3,7,18,.35);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:#111426;color:var(--ink);font-family:"Microsoft JhengHei","Noto Sans TC",system-ui,sans-serif;overflow:hidden}
+  button,input,select{font:inherit}
+  button{cursor:pointer}
+  #app{height:100dvh;display:grid;grid-template-rows:auto 1fr auto;background:radial-gradient(circle at top,#242a47,#121526 60%)}
+  .topbar{height:58px;padding:8px max(10px,env(safe-area-inset-right)) 8px max(10px,env(safe-area-inset-left));display:flex;align-items:center;gap:10px;background:#191d31;border-bottom:2px solid #313957;z-index:30}
+  .brand{display:flex;align-items:center;gap:9px;min-width:0}
+  .brand-badge{width:38px;height:38px;border-radius:10px;background:linear-gradient(145deg,#7dd3fc,#a78bfa);display:grid;place-items:center;color:#111827;font-weight:900;box-shadow:inset 0 -4px rgba(0,0,0,.16);font-family:monospace}
+  .brand h1{font-size:16px;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .brand small{display:block;color:var(--muted);font-size:11px}
+  .top-stats{margin-left:auto;display:flex;gap:7px;align-items:center}
+  .stat-chip,.icon-btn{border:1px solid var(--line);background:#252b49;color:var(--ink);border-radius:9px;min-height:38px;padding:6px 9px;display:flex;align-items:center;gap:6px;font-weight:700}
+  .icon-btn{min-width:38px;justify-content:center;padding:6px}
+  .stat-chip span{color:var(--accent2)}
+  .main{min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 310px;gap:0}
+  .world-wrap{position:relative;min-width:0;min-height:0;background:#0b1020;overflow:hidden;touch-action:none}
+  #world{display:block;width:100%;height:100%;image-rendering:pixelated;background:#315c2d}
+  .hud{position:absolute;left:12px;top:12px;display:flex;flex-direction:column;gap:7px;max-width:min(360px,70%);pointer-events:none}
+  .quest-card,.near-card{background:rgba(18,22,39,.88);border:2px solid #56628d;border-radius:10px;padding:9px 11px;box-shadow:var(--shadow);backdrop-filter:blur(6px)}
+  .quest-card strong{color:var(--accent2);font-size:13px}
+  .quest-card p,.near-card p{margin:4px 0 0;color:#eef1ff;font-size:13px;line-height:1.45}
+  .near-card{display:none;border-color:var(--accent);animation:pulse 1.2s infinite alternate}
+  .near-card.show{display:block}
+  @keyframes pulse{from{transform:translateY(0)}to{transform:translateY(-2px)}}
+  .action-zone{position:absolute;right:14px;bottom:18px;display:flex;flex-direction:column;gap:8px;align-items:flex-end;z-index:10}
+  .action-btn{border:3px solid #dbeafe;background:#2563eb;color:#fff;border-radius:50%;width:68px;height:68px;font-size:14px;font-weight:900;box-shadow:0 6px 0 #153c8b,0 10px 25px rgba(0,0,0,.35);display:none}
+  .action-btn.show{display:block}
+  .action-btn:active{transform:translateY(4px);box-shadow:0 2px 0 #153c8b}
+  .dpad{position:absolute;left:14px;bottom:16px;width:156px;height:156px;z-index:12;touch-action:none;user-select:none}
+  .dpad button{position:absolute;width:54px;height:54px;border:2px solid #c7d2fe;background:rgba(37,43,73,.9);color:#fff;border-radius:14px;font-size:25px;font-weight:900;box-shadow:0 4px 0 #111827}
+  .dpad button:active,.dpad button.active{transform:translateY(3px);box-shadow:0 1px 0 #111827;background:#4f46e5}
+  .d-up{left:51px;top:0}.d-left{left:0;top:51px}.d-right{right:0;top:51px}.d-down{left:51px;bottom:0}
+  .map-tools{position:absolute;right:14px;top:13px;display:flex;gap:7px;z-index:9}
+  .map-tools button{border:1px solid #68739e;background:rgba(22,27,47,.9);color:#fff;border-radius:9px;min-width:42px;height:40px;font-weight:800}
+  .side{background:#1a1f36;border-left:2px solid #303858;min-height:0;display:flex;flex-direction:column;padding:12px;gap:11px;overflow:auto}
+  .side h2{font-size:16px;margin:0}
+  .side-card{background:#242b49;border:1px solid #424d75;border-radius:12px;padding:11px}
+  .side-card h3{font-size:14px;margin:0 0 8px;color:var(--accent)}
+  .side-card p{font-size:12px;color:var(--muted);line-height:1.5;margin:6px 0}
+  .zone-list{display:grid;gap:7px}
+  .zone-btn{width:100%;text-align:left;border:1px solid #465178;background:#30395f;color:#fff;border-radius:9px;padding:9px;display:flex;justify-content:space-between;gap:8px}
+  .zone-btn.done{border-color:#38bdf8;background:#1e3a5f}
+  .zone-btn small{color:#bdc6e6}
+  .mastery-row{display:grid;grid-template-columns:1fr auto;gap:7px;align-items:center;margin:7px 0}
+  .bar{height:8px;background:#11182d;border-radius:99px;overflow:hidden;border:1px solid #3f496e}
+  .bar i{display:block;height:100%;background:linear-gradient(90deg,#22d3ee,#a78bfa);width:0}
+  .bottom-nav{display:none;background:#181d32;border-top:2px solid #313957;padding:6px max(6px,env(safe-area-inset-right)) calc(6px + env(safe-area-inset-bottom)) max(6px,env(safe-area-inset-left));gap:4px;z-index:30}
+  .bottom-nav button{flex:1;border:0;background:transparent;color:#b8c1df;border-radius:8px;padding:6px 2px;font-size:11px;font-weight:700;min-height:46px}
+  .bottom-nav button b{display:block;font-size:20px;line-height:20px;margin-bottom:2px}
+  .bottom-nav button.active,.bottom-nav button:active{background:#30395e;color:#fff}
+  .modal{position:fixed;inset:0;background:rgba(3,6,18,.72);z-index:100;display:none;align-items:center;justify-content:center;padding:14px;backdrop-filter:blur(5px)}
+  .modal.open{display:flex}
+  .dialog{width:min(760px,100%);max-height:min(88dvh,860px);background:#202641;border:2px solid #59658f;border-radius:16px;box-shadow:0 25px 80px rgba(0,0,0,.55);overflow:hidden;display:flex;flex-direction:column}
+  .dialog.wide{width:min(980px,100%)}
+  .dialog-head{display:flex;align-items:center;gap:9px;padding:12px 14px;background:#171c32;border-bottom:1px solid #3f496d}
+  .dialog-head h2{font-size:18px;margin:0;flex:1}
+  .close-btn{border:1px solid #66719b;background:#2a3255;color:#fff;width:38px;height:36px;border-radius:9px;font-size:20px}
+  .dialog-body{padding:15px;overflow:auto;overscroll-behavior:contain}
+  .dialog-foot{padding:10px 14px;border-top:1px solid #3e486b;background:#191e34;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+  .primary,.secondary,.danger,.good-btn{border:1px solid #7390ff;color:#fff;border-radius:9px;padding:10px 14px;font-weight:800;background:#3b5bdb}
+  .secondary{background:#30395e;border-color:#606d99}.danger{background:#9f1239;border-color:#fb7185}.good-btn{background:#087f5b;border-color:#4ade80}
+  .hero-panel{background:linear-gradient(135deg,#28345c,#34275a);border:1px solid #5c6aa0;border-radius:14px;padding:16px;margin-bottom:13px}
+  .hero-panel h3{margin:0 0 7px;color:#fde68a}.hero-panel p{line-height:1.65;color:#eef2ff;margin:0}
+  .word-card{background:#f9f7e7;color:#111827;border:5px solid #d8e2eb;border-radius:14px;padding:18px;box-shadow:inset 0 -5px rgba(17,24,39,.08);position:relative;overflow:hidden}
+  .word-card:before{content:"";position:absolute;left:0;top:0;border-top:42px solid #cddbea;border-right:42px solid transparent}
+  .word-card .num{position:absolute;left:8px;top:6px;font-weight:900;color:#182235;z-index:1}
+  .word-title{font-size:clamp(30px,7vw,54px);text-align:center;font-weight:900;margin:5px 0 3px;letter-spacing:.5px}
+  .word-meta{text-align:center;color:#475569;font-weight:700}
+  .meaning{font-size:20px;text-align:center;margin:14px 0 8px;font-weight:900;color:#1d4ed8}
+  .sentence{background:#fff;border:1px solid #d5d9df;border-radius:9px;padding:12px;line-height:1.6;font-size:16px}
+  .speech-row{display:flex;justify-content:center;gap:8px;margin-top:12px;flex-wrap:wrap}
+  .speech-btn{border:1px solid #9ca3af;background:#fff;color:#111827;border-radius:9px;padding:8px 11px;font-weight:800}
+  .cards-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .mini-card{border:1px solid #4b577f;border-radius:10px;padding:11px;background:#293253}
+  .mini-card strong{color:#fde68a;font-size:17px}.mini-card p{color:#cbd5e1;font-size:13px;line-height:1.5;margin:4px 0}
+  .choice-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:14px}
+  .choice{min-height:58px;border:2px solid #515e8a;background:#2c3559;color:#fff;border-radius:11px;padding:10px;font-weight:800;text-align:left}
+  .choice.correct{background:#075f46;border-color:#4ade80}.choice.wrong{background:#881337;border-color:#fb7185}
+  .quiz-top{display:flex;gap:8px;justify-content:space-between;align-items:center;color:#cbd5e1;font-size:13px}
+  .prompt{font-size:22px;line-height:1.5;text-align:center;margin:22px 0 8px;font-weight:900}
+  .input-row{display:flex;gap:8px;margin-top:15px}.input-row input{flex:1;min-width:0;background:#11172a;border:2px solid #53618d;color:#fff;border-radius:10px;padding:11px;font-size:17px}
+  .feedback{min-height:40px;margin-top:12px;padding:10px;border-radius:9px;background:#171c31;color:#dbeafe;line-height:1.5}
+  .feedback.good{border:1px solid #4ade80;background:#073d31}.feedback.bad{border:1px solid #fb7185;background:#4d1023}
+  .dashboard-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-bottom:14px}
+  .metric{background:#283151;border:1px solid #4d5983;border-radius:12px;padding:12px;text-align:center}.metric b{display:block;font-size:26px;color:#fde68a}.metric span{font-size:12px;color:#cbd5e1}
+  table{width:100%;border-collapse:collapse;font-size:13px}th,td{border-bottom:1px solid #465077;padding:8px;text-align:left}th{color:#67e8f9;background:#1b213a;position:sticky;top:0}
+  .tag{display:inline-block;padding:3px 7px;border-radius:99px;background:#364169;color:#dbeafe;font-size:11px}.tag.good{background:#08644b}.tag.warn{background:#854d0e}
+  .teacher-panel{display:grid;grid-template-columns:1fr 1fr;gap:10px}.teacher-box{background:#272f50;border:1px solid #4d5981;border-radius:10px;padding:12px}.teacher-box h3{margin:0 0 8px;color:#fde68a;font-size:15px}.teacher-box label{display:block;font-size:12px;color:#cbd5e1;margin:7px 0}.teacher-box input,.teacher-box select{width:100%;background:#11172a;color:#fff;border:1px solid #59668f;border-radius:8px;padding:9px}
+  .toast{position:fixed;left:50%;bottom:90px;transform:translate(-50%,20px);z-index:200;background:#0f172a;border:1px solid #64748b;color:#fff;padding:10px 14px;border-radius:99px;opacity:0;pointer-events:none;transition:.25s;box-shadow:var(--shadow);max-width:90%;text-align:center}.toast.show{opacity:1;transform:translate(-50%,0)}
+  .intro{position:fixed;inset:0;z-index:160;background:linear-gradient(rgba(10,15,31,.86),rgba(10,15,31,.96));display:flex;align-items:center;justify-content:center;padding:18px}.intro.hidden{display:none}.intro-box{width:min(650px,100%);background:#202641;border:3px solid #7dd3fc;border-radius:18px;padding:22px;box-shadow:0 20px 80px #000}.intro h2{font-size:clamp(25px,7vw,42px);margin:0 0 10px;color:#fde68a}.intro p{line-height:1.7;color:#e2e8f0}.intro ul{line-height:1.8;padding-left:22px}.pixel-line{height:7px;background:repeating-linear-gradient(90deg,#67e8f9 0 18px,#a78bfa 18px 36px,#facc15 36px 54px);margin:14px 0;border-radius:6px}
+  .result-ring{width:150px;height:150px;border-radius:50%;margin:12px auto;display:grid;place-items:center;background:conic-gradient(#4ade80 var(--pct),#30395c 0);position:relative}.result-ring:after{content:"";position:absolute;inset:17px;border-radius:50%;background:#202641}.result-ring b{z-index:2;font-size:31px;color:#fde68a}
+  @media(max-width:900px){
+    .main{grid-template-columns:1fr}.side{display:none}.bottom-nav{display:flex}.topbar{height:54px}.stat-chip.hide-mobile{display:none}
+    .world-wrap{height:auto}.dpad{transform:scale(.86);transform-origin:left bottom;left:7px;bottom:6px}.action-zone{right:10px;bottom:13px}.action-btn{width:62px;height:62px}.map-tools{top:8px;right:8px}
+    .hud{top:8px;left:8px}.quest-card{padding:7px 9px}.quest-card p{font-size:12px}
+  }
+  @media(max-width:620px){
+    .brand small{display:none}.brand h1{font-size:14px}.top-stats{gap:4px}.stat-chip{font-size:12px;padding:5px 7px}.icon-btn{min-width:34px;height:34px}
+    .dialog{max-height:92dvh;border-radius:13px}.dialog-body{padding:12px}.choice-grid,.cards-grid,.teacher-panel,.dashboard-grid{grid-template-columns:1fr}.dashboard-grid{grid-template-columns:repeat(2,1fr)}
+    .word-card{padding:16px 11px}.sentence{font-size:14px}.prompt{font-size:19px}.dpad{width:144px;height:144px}.dpad button{width:50px;height:50px}.d-up{left:47px}.d-left{top:47px}.d-right{top:47px}.d-down{left:47px}
+  }
+  @media(max-width:900px) and (orientation:landscape){
+    .topbar{height:48px}.bottom-nav{display:none}.main{grid-template-columns:minmax(0,1fr) 230px}.side{display:flex;padding:8px}.side-card{padding:8px}.side .hide-landscape{display:none}.dpad{transform:scale(.7);left:4px;bottom:2px}.action-btn{width:56px;height:56px}.action-zone{bottom:8px}.hud{max-width:48%}
+  }
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-badge">WQ</div>
+      <div><h1>Word Quest Town</h1><small>高中英文單字任務城</small></div>
+    </div>
+    <div class="top-stats">
+      <div class="stat-chip"><span id="xpText">0</span> XP</div>
+      <div class="stat-chip hide-mobile">已學 <span id="learnedText">0</span>/24</div>
+      <button class="icon-btn" id="soundToggle" title="切換音效">🔊</button>
+      <button class="icon-btn" id="helpBtn" title="操作說明">?</button>
+    </div>
+  </header>
+
+  <main class="main">
+    <section class="world-wrap" id="worldWrap" aria-label="遊戲地圖">
+      <canvas id="world"></canvas>
+      <div class="hud">
+        <div class="quest-card"><strong>目前任務</strong><p id="questText">前往「新生大廳」，認識第一組單字。</p></div>
+        <div class="near-card" id="nearCard"><strong id="nearTitle">可互動</strong><p id="nearText"></p></div>
+      </div>
+      <div class="map-tools">
+        <button id="centerBtn" title="回到角色位置">◎</button>
+        <button id="mapBtn" title="區域地圖">MAP</button>
+      </div>
+      <div class="dpad" aria-label="移動方向鍵">
+        <button class="d-up" data-dir="up" aria-label="向上">▲</button>
+        <button class="d-left" data-dir="left" aria-label="向左">◀</button>
+        <button class="d-right" data-dir="right" aria-label="向右">▶</button>
+        <button class="d-down" data-dir="down" aria-label="向下">▼</button>
+      </div>
+      <div class="action-zone"><button class="action-btn" id="interactBtn">互動</button></div>
+    </section>
+
+    <aside class="side">
+      <div class="side-card">
+        <h2>城市修復任務</h2>
+        <p>移動到發光區域，學習單字、完成情境任務，逐步恢復城市的「語言能源」。</p>
+      </div>
+      <div class="side-card">
+        <h3>六大學習區</h3>
+        <div class="zone-list" id="zoneList"></div>
+      </div>
+      <div class="side-card hide-landscape">
+        <h3>學習成效</h3>
+        <div class="mastery-row"><span>單字完成度</span><b id="sideLearned">0%</b></div><div class="bar"><i id="learnBar"></i></div>
+        <div class="mastery-row"><span>答題正確率</span><b id="sideAccuracy">0%</b></div><div class="bar"><i id="accuracyBar"></i></div>
+        <div class="mastery-row"><span>任務進度</span><b id="sideQuest">0/6</b></div><div class="bar"><i id="questBar"></i></div>
+      </div>
+      <button class="primary" id="quickPractice">快速練習</button>
+      <button class="secondary" id="dashboardBtn">學習儀表板</button>
+    </aside>
+  </main>
+
+  <nav class="bottom-nav" aria-label="主要功能">
+    <button class="active" data-nav="map"><b>🗺</b>地圖</button>
+    <button data-nav="learn"><b>📘</b>學習</button>
+    <button data-nav="practice"><b>🎯</b>練習</button>
+    <button data-nav="test"><b>🏆</b>測驗</button>
+    <button data-nav="record"><b>📊</b>歷程</button>
+    <button data-nav="teacher"><b>⚙</b>教師</button>
+  </nav>
+</div>
+
+<div class="intro" id="intro">
+  <div class="intro-box">
+    <h2>Word Quest Town</h2>
+    <div class="pixel-line"></div>
+    <p>城市的語言能源核心失去 24 個關鍵單字。你將化身「單字修復員」，走訪六個區域，透過教學、練習、情境任務與測驗，讓城市重新運轉。</p>
+    <ul>
+      <li>電腦：使用 WASD 或方向鍵移動，按空白鍵互動。</li>
+      <li>手機：使用左下方向鍵移動，靠近地點後按「互動」。</li>
+      <li>每個英文單字與例句皆可按喇叭朗讀。</li>
+      <li>學習紀錄會儲存在這台裝置的瀏覽器中。</li>
+    </ul>
+    <button class="primary" id="startBtn" style="width:100%;font-size:17px">進入任務城</button>
+  </div>
+</div>
+
+<div class="modal" id="modal"><div class="dialog" id="dialog">
+  <div class="dialog-head"><h2 id="modalTitle">標題</h2><button class="close-btn" id="closeModal">×</button></div>
+  <div class="dialog-body" id="modalBody"></div>
+  <div class="dialog-foot" id="modalFoot"></div>
+</div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+(() => {
+'use strict';
+const WORDS = [
+ {w:'progress',pos:'n./v.',zh:'進步；進展；前進',ex:'The class made steady progress after practicing every day.',zone:0},
+ {w:'preservation',pos:'n.',zh:'保存；保育；維護',ex:"The preservation of old buildings protects the city's history.",zone:1},
+ {w:'glimpse',pos:'n./v.',zh:'一瞥；短暫看見',ex:'We caught a glimpse of the river from the school bus.',zone:2},
+ {w:'identity',pos:'n.',zh:'身分；認同；特性',ex:'Language can be an important part of cultural identity.',zone:0},
+ {w:'development',pos:'n.',zh:'發展；開發；成長',ex:"The new park is part of the city's sustainable development plan.",zone:0},
+ {w:'treasure',pos:'n./v.',zh:'寶藏；珍惜',ex:'Local residents treasure the memories connected to this library.',zone:1},
+ {w:'replace',pos:'v.',zh:'取代；更換',ex:'Solar panels may replace some traditional sources of energy.',zone:2},
+ {w:'endanger',pos:'v.',zh:'危及；使陷入危險',ex:'Plastic waste can endanger animals that live near the coast.',zone:2},
+ {w:'abundance',pos:'n.',zh:'豐富；大量；充裕',ex:'The garden provides an abundance of fresh vegetables.',zone:1},
+ {w:'campaign',pos:'n./v.',zh:'運動；活動；發起行動',ex:'Students started a campaign to reduce single-use plastic.',zone:5},
+ {w:'conclude',pos:'v.',zh:'下結論；結束',ex:'We can conclude that regular practice improves memory.',zone:0},
+ {w:'transport',pos:'n./v.',zh:'運輸；交通工具；運送',ex:'Public transport helps students travel around the city safely.',zone:3},
+ {w:'situated',pos:'adj.',zh:'位於；坐落在',ex:'The learning center is situated beside the main station.',zone:3},
+ {w:'drown',pos:'v.',zh:'溺水；淹沒',ex:'Strong currents can cause an inexperienced swimmer to drown.',zone:4},
+ {w:'spare',pos:'v./adj.',zh:'抽出；饒恕；備用的',ex:'Please spare a few minutes to help the community project.',zone:2},
+ {w:'priceless',pos:'adj.',zh:'無價的；極珍貴的',ex:'The handwritten letters are priceless records of family history.',zone:1},
+ {w:'relieve',pos:'v.',zh:'減輕；緩解；解除',ex:'A short break can relieve stress before an important test.',zone:4},
+ {w:'urban',pos:'adj.',zh:'都市的；城市的',ex:'Urban planners are creating more green spaces for residents.',zone:3},
+ {w:'resident',pos:'n.',zh:'居民；住戶',ex:'Every resident was invited to discuss the new park.',zone:3},
+ {w:'crucial',pos:'adj.',zh:'關鍵的；至關重要的',ex:'Clear communication is crucial during an emergency.',zone:4},
+ {w:'urgent',pos:'adj.',zh:'緊急的；迫切的',ex:'The rescue team received an urgent message from the river.',zone:4},
+ {w:'enormous',pos:'adj.',zh:'巨大的；龐大的',ex:'The new library has an enormous collection of digital resources.',zone:5},
+ {w:'mission',pos:'n.',zh:'任務；使命',ex:"Our mission is to rebuild the town's learning network.",zone:5},
+ {w:'fond',pos:'adj.',zh:'喜愛的；深情的（be fond of）',ex:'Many students are fond of studying in the quiet reading room.',zone:5}
+];
+const ZONES = [
+ {name:'新生大廳',short:'大廳',icon:'A',x:330,y:235,w:340,h:250,color:'#9a6b3f',story:'先建立你的學習身分，理解進步與發展，並學會從資訊中下結論。',mission:'完成身分建檔：學習本區 4 字並答對情境題。'},
+ {name:'文化保存館',short:'保存館',icon:'P',x:760,y:210,w:350,h:275,color:'#775b88',story:'珍貴史料散落在館內。只有正確理解保存、寶藏與無價之物，才能修復典藏。',mission:'修復數位典藏：判斷哪項資產最值得保存。'},
+ {name:'生態觀察園',short:'生態園',icon:'E',x:1180,y:235,w:330,h:270,color:'#3d7b4e',story:'城市邊緣的動植物受到威脅。你必須觀察線索、替換危險設備，並挪出時間救援。',mission:'解除環境危機：連續答對 3 題。'},
+ {name:'城市交通站',short:'交通站',icon:'T',x:320,y:650,w:360,h:255,color:'#4f6e8d',story:'交通資訊失靈，居民無法找到位於市中心的學習站。',mission:'重建路線：用正確單字完成導航訊息。'},
+ {name:'緊急應變中心',short:'應變中心',icon:'!',x:770,y:640,w:350,h:270,color:'#8b4d4d',story:'河川水位上升，救援隊需要關鍵、緊急且清楚的訊息。',mission:'發送救援訊息：通過限時應變題。'},
+ {name:'任務廣場',short:'任務廣場',icon:'M',x:1190,y:650,w:340,h:270,color:'#8a743b',story:'最後的城市行動即將開始。發起活動、完成巨大任務，找回你對學習的熱愛。',mission:'啟動全城任務：完成本區後挑戰總測驗。'}
+];
+const STORAGE='wordQuestTown_v3';
+const defaultState=()=>({xp:0,learned:[],mastery:{},zonePassed:[],practiceCorrect:0,practiceTotal:0,testCount:0,bestScore:0,lastScore:0,sessions:0,timeSec:0,sound:true,introSeen:false,teacherGoal:80,events:[]});
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+let state=loadState(); state.sessions=(state.sessions||0)+1; saveState();
+let currentZone=null,currentWordIndex=0,practice=null,test=null,teacherUnlocked=false;
+
+const canvas=$('#world'), ctx=canvas.getContext('2d'); ctx.imageSmoothingEnabled=false;
+const player={x:510,y:480,r:17,dir:'down',speed:235};
+const camera={x:0,y:0,zoom:1};
+const keys={up:false,down:false,left:false,right:false};
+const world={w:1800,h:1100};
+let near=null,lastTime=performance.now(),elapsed=0;
+
+function loadState(){try{return {...defaultState(),...JSON.parse(localStorage.getItem(STORAGE)||'{}')}}catch(e){return defaultState()}}
+function saveState(){localStorage.setItem(STORAGE,JSON.stringify(state));updateUI()}
+function updateUI(){
+  $('#xpText').textContent=state.xp||0; $('#learnedText').textContent=state.learned.length;
+  const learnedPct=Math.round(state.learned.length/24*100); const acc=state.practiceTotal?Math.round(state.practiceCorrect/state.practiceTotal*100):0;
+  $('#sideLearned').textContent=learnedPct+'%'; $('#learnBar').style.width=learnedPct+'%';
+  $('#sideAccuracy').textContent=acc+'%'; $('#accuracyBar').style.width=acc+'%';
+  $('#sideQuest').textContent=state.zonePassed.length+'/6'; $('#questBar').style.width=(state.zonePassed.length/6*100)+'%';
+  $('#soundToggle').textContent=state.sound?'🔊':'🔇';
+  const next=ZONES.findIndex((z,i)=>!state.zonePassed.includes(i));
+  $('#questText').textContent=next<0?'六區任務完成！前往任務廣場挑戰總測驗。':`前往「${ZONES[next].name}」，${ZONES[next].mission}`;
+  renderZoneList();
+}
+function renderZoneList(){
+  const box=$('#zoneList'); if(!box)return; box.innerHTML='';
+  ZONES.forEach((z,i)=>{const learned=WORDS.filter(v=>v.zone===i&&state.learned.includes(v.w)).length;const b=document.createElement('button');b.className='zone-btn'+(state.zonePassed.includes(i)?' done':'');b.innerHTML=`<span>${z.icon} ${z.name}</span><small>${learned}/4 ${state.zonePassed.includes(i)?'✓':''}</small>`;b.onclick=()=>openZone(i);box.appendChild(b)});
+}
+
+function resize(){
+  const r=canvas.getBoundingClientRect(),dpr=Math.min(devicePixelRatio||1,2);canvas.width=Math.round(r.width*dpr);canvas.height=Math.round(r.height*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);camera.zoom=Math.max(.55,Math.min(1.05,r.width/1200));centerCamera();
+}
+function centerCamera(){const r=canvas.getBoundingClientRect();camera.x=clamp(player.x-r.width/(2*camera.zoom),0,world.w-r.width/camera.zoom);camera.y=clamp(player.y-r.height/(2*camera.zoom),0,world.h-r.height/camera.zoom)}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
+function rnd(n){return Math.floor(Math.random()*n)}
+function shuffle(a){return [...a].sort(()=>Math.random()-.5)}
+
+function draw(){
+  const r=canvas.getBoundingClientRect();ctx.clearRect(0,0,r.width,r.height);ctx.save();ctx.scale(camera.zoom,camera.zoom);ctx.translate(-camera.x,-camera.y);
+  drawGround();drawRoads();drawZones();drawProps();drawNPCs();drawPlayer();ctx.restore();
+  requestAnimationFrame(loop);
+}
+function drawGround(){
+  ctx.fillStyle='#376b34';ctx.fillRect(0,0,world.w,world.h);
+  ctx.fillStyle='#315f2f';for(let y=0;y<world.h;y+=48)for(let x=0;x<world.w;x+=48)if((x+y)%96===0)ctx.fillRect(x+8,y+8,3,3);
+  ctx.fillStyle='#2c5a29';ctx.fillRect(0,0,world.w,80);ctx.fillRect(0,1020,world.w,80);
+  // pond
+  ctx.fillStyle='#204f78';ctx.fillRect(55,760,185,210);ctx.fillStyle='#4a90b8';ctx.fillRect(68,775,158,180);ctx.fillStyle='#93c5d8';for(let i=0;i<9;i++)ctx.fillRect(75+(i%3)*47,792+Math.floor(i/3)*50,24,3);
+}
+function drawRoads(){
+  ctx.fillStyle='#45484e';ctx.fillRect(0,500,world.w,115);ctx.fillRect(695,0,90,world.h);ctx.fillRect(1115,0,90,world.h);
+  ctx.fillStyle='#d2b84c';for(let x=15;x<world.w;x+=78)ctx.fillRect(x,554,38,7);for(let y=12;y<world.h;y+=78){ctx.fillRect(736,y,7,36);ctx.fillRect(1156,y,7,36)}
+  ctx.fillStyle='#b9bec7';ctx.fillRect(0,493,world.w,7);ctx.fillRect(0,615,world.w,7);
+  // crossings
+  ctx.fillStyle='#e5e7eb';for(let i=0;i<6;i++){ctx.fillRect(650+i*24,520,14,76);ctx.fillRect(1080+i*24,520,14,76)}
+}
+function drawZones(){
+  ZONES.forEach((z,i)=>{
+    ctx.save();ctx.fillStyle='#15192b';ctx.fillRect(z.x-12,z.y-12,z.w+24,z.h+24);ctx.fillStyle=z.color;ctx.fillRect(z.x,z.y,z.w,z.h);
+    // floor tiles
+    ctx.globalAlpha=.18;ctx.fillStyle='#fff';for(let y=z.y;y<z.y+z.h;y+=32)for(let x=z.x;x<z.x+z.w;x+=32)if(((x+y)/32)%2===0)ctx.fillRect(x,y,32,32);ctx.globalAlpha=1;
+    // sign
+    ctx.fillStyle='#1b2238';ctx.fillRect(z.x+28,z.y-36,z.w-56,38);ctx.strokeStyle='#9fb3db';ctx.lineWidth=3;ctx.strokeRect(z.x+28,z.y-36,z.w-56,38);ctx.fillStyle='#e8eeff';ctx.font='bold 19px Microsoft JhengHei';ctx.textAlign='center';ctx.fillText(z.name,z.x+z.w/2,z.y-11);
+    // hotspot glow
+    const cx=z.x+z.w/2,cy=z.y+z.h/2;ctx.globalAlpha=.25+.12*Math.sin(elapsed*3+i);ctx.fillStyle=state.zonePassed.includes(i)?'#4ade80':'#67e8f9';ctx.beginPath();ctx.arc(cx,cy,52+6*Math.sin(elapsed*2+i),0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
+    ctx.fillStyle='#18223d';ctx.fillRect(cx-28,cy-28,56,56);ctx.strokeStyle=state.zonePassed.includes(i)?'#86efac':'#a5f3fc';ctx.lineWidth=4;ctx.strokeRect(cx-28,cy-28,56,56);ctx.fillStyle='#fff';ctx.font='bold 28px monospace';ctx.fillText(state.zonePassed.includes(i)?'✓':z.icon,cx,cy+10);
+    drawFurniture(z,i);ctx.restore();
+  });
+}
+function drawFurniture(z,i){
+  const x=z.x,y=z.y,w=z.w,h=z.h;ctx.strokeStyle='rgba(0,0,0,.3)';ctx.lineWidth=3;
+  if(i===0){for(let j=0;j<3;j++){ctx.fillStyle='#c5ccd8';ctx.fillRect(x+35+j*100,y+45,78,34);ctx.strokeRect(x+35+j*100,y+45,78,34)}ctx.fillStyle='#6b4a32';ctx.fillRect(x+55,y+h-65,230,25)}
+  if(i===1){for(let j=0;j<4;j++){ctx.fillStyle='#5b382e';ctx.fillRect(x+25+j*78,y+40,55,120);ctx.fillStyle='#d7a54f';for(let k=0;k<4;k++)ctx.fillRect(x+31+j*78,y+48+k*27,42,7)}}
+  if(i===2){for(let j=0;j<5;j++)tree(x+40+j*63,y+55+(j%2)*65,.55);ctx.fillStyle='#6a4a2d';ctx.fillRect(x+80,y+h-55,170,18)}
+  if(i===3){ctx.fillStyle='#98a7b6';ctx.fillRect(x+35,y+45,w-70,48);for(let j=0;j<4;j++){ctx.fillStyle='#29384f';ctx.fillRect(x+54+j*72,y+53,48,32)}ctx.fillStyle='#d9b74e';ctx.fillRect(x+70,y+h-55,220,12)}
+  if(i===4){ctx.fillStyle='#90a4b7';ctx.fillRect(x+35,y+40,w-70,50);for(let j=0;j<3;j++){ctx.fillStyle='#213349';ctx.fillRect(x+55+j*92,y+49,64,31);ctx.fillStyle='#ef4444';ctx.fillRect(x+62+j*92,y+54,8,8)}ctx.fillStyle='#4d7ca4';ctx.fillRect(x+55,y+h-70,w-110,22)}
+  if(i===5){ctx.fillStyle='#69513a';ctx.fillRect(x+45,y+45,w-90,35);ctx.fillStyle='#d9b94c';ctx.fillRect(x+w/2-70,y+h-70,140,22);ctx.fillStyle='#eff6ff';ctx.fillRect(x+w/2-9,y+84,18,50)}
+}
+function tree(x,y,s=1){ctx.save();ctx.translate(x,y);ctx.scale(s,s);ctx.fillStyle='#5d3b25';ctx.fillRect(-7,20,14,26);ctx.fillStyle='#173d27';ctx.fillRect(-30,-18,60,50);ctx.fillStyle='#2f7a43';ctx.fillRect(-22,-28,44,48);ctx.fillStyle='#54a95a';ctx.fillRect(-12,-33,24,20);ctx.restore()}
+function drawProps(){
+  for(let x=85;x<world.w;x+=170){tree(x,120,.75);tree(x+58,985,.72)}
+  // lamps along roads
+  for(let x=90;x<world.w;x+=190){ctx.fillStyle='#262b35';ctx.fillRect(x,466,6,28);ctx.fillStyle='#fde68a';ctx.fillRect(x-7,459,20,10)}
+  // tiny cars
+  const carX=(elapsed*70)%world.w;ctx.fillStyle='#ef4444';ctx.fillRect(carX,530,48,24);ctx.fillStyle='#bae6fd';ctx.fillRect(carX+9,534,20,9);ctx.fillStyle='#111827';ctx.fillRect(carX+6,551,9,7);ctx.fillRect(carX+34,551,9,7);
+}
+function drawNPCs(){
+  const npcs=[{x:425,y:350,c:'#f59e0b',name:'館員'}, {x:930,y:360,c:'#a78bfa',name:'研究員'}, {x:950,y:790,c:'#fb7185',name:'救援員'}, {x:1360,y:800,c:'#4ade80',name:'隊長'}];
+  npcs.forEach((n,i)=>{const bob=Math.sin(elapsed*3+i)*2;ctx.fillStyle='#0f172a';ctx.fillRect(n.x-20,n.y-42+bob,40,18);ctx.fillStyle='#fff';ctx.font='11px Microsoft JhengHei';ctx.textAlign='center';ctx.fillText(n.name,n.x,n.y-29+bob);ctx.fillStyle='#f2c6a0';ctx.fillRect(n.x-8,n.y-19+bob,16,14);ctx.fillStyle=n.c;ctx.fillRect(n.x-11,n.y-5+bob,22,25);ctx.fillStyle='#111827';ctx.fillRect(n.x-9,n.y+20+bob,7,13);ctx.fillRect(n.x+2,n.y+20+bob,7,13)});
+}
+function drawPlayer(){
+  const x=player.x,y=player.y,b=Math.sin(elapsed*8)*1.5;ctx.fillStyle='rgba(0,0,0,.3)';ctx.beginPath();ctx.ellipse(x,y+22,18,7,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#f3c29d';ctx.fillRect(x-10,y-23+b,20,18);ctx.fillStyle='#312e81';ctx.fillRect(x-13,y-8+b,26,28);ctx.fillStyle='#111827';ctx.fillRect(x-10,y+20+b,8,14);ctx.fillRect(x+2,y+20+b,8,14);ctx.fillStyle='#67e8f9';ctx.fillRect(x-12,y-27+b,24,6);ctx.fillStyle='#111827';if(player.dir==='left')ctx.fillRect(x-7,y-17+b,3,3);else if(player.dir==='right')ctx.fillRect(x+5,y-17+b,3,3);else{ctx.fillRect(x-6,y-17+b,3,3);ctx.fillRect(x+4,y-17+b,3,3)}
+  ctx.strokeStyle='#e0f2fe';ctx.lineWidth=3;ctx.strokeRect(x-14,y-29+b,28,63);
+}
+function loop(t){
+  const dt=Math.min((t-lastTime)/1000,.04);lastTime=t;elapsed+=dt;state.timeSec=(state.timeSec||0)+dt;
+  let dx=(keys.right?1:0)-(keys.left?1:0),dy=(keys.down?1:0)-(keys.up?1:0);if(dx||dy){const len=Math.hypot(dx,dy);dx/=len;dy/=len;player.x=clamp(player.x+dx*player.speed*dt,25,world.w-25);player.y=clamp(player.y+dy*player.speed*dt,25,world.h-25);player.dir=Math.abs(dx)>Math.abs(dy)?(dx>0?'right':'left'):(dy>0?'down':'up');centerCamera()}
+  detectNear();draw();
+}
+function detectNear(){let best=null,dist=999;ZONES.forEach((z,i)=>{const cx=z.x+z.w/2,cy=z.y+z.h/2,d=Math.hypot(player.x-cx,player.y-cy);if(d<dist){dist=d;best=i}});near=dist<115?best:null;const nc=$('#nearCard'),ib=$('#interactBtn');if(near!==null){nc.classList.add('show');ib.classList.add('show');$('#nearTitle').textContent=ZONES[near].name;$('#nearText').textContent='已進入互動範圍，按下互動開始任務。'}else{nc.classList.remove('show');ib.classList.remove('show')}}
+
+function audioTone(type='click'){
+  if(!state.sound)return;try{const A=window.AudioContext||window.webkitAudioContext,ac=audioTone.ac||(audioTone.ac=new A());const o=ac.createOscillator(),g=ac.createGain();o.connect(g);g.connect(ac.destination);const now=ac.currentTime;o.type=type==='good'?'sine':'square';o.frequency.setValueAtTime(type==='good'?620:type==='bad'?180:330,now);if(type==='good')o.frequency.linearRampToValueAtTime(900,now+.12);g.gain.setValueAtTime(.06,now);g.gain.exponentialRampToValueAtTime(.001,now+.18);o.start(now);o.stop(now+.19)}catch(e){}
+}
+function speak(text,lang='en-US'){if(!('speechSynthesis'in window)){toast('此瀏覽器不支援語音朗讀');return}speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang=lang;u.rate=.82;u.pitch=1;speechSynthesis.speak(u);audioTone('click')}
+function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(toast.timer);toast.timer=setTimeout(()=>t.classList.remove('show'),1800)}
+function openModal(title,html,foot='',wide=false){$('#modalTitle').textContent=title;$('#modalBody').innerHTML=html;$('#modalFoot').innerHTML=foot;$('#dialog').classList.toggle('wide',wide);$('#modal').classList.add('open');audioTone('click')}
+function closeModal(){$('#modal').classList.remove('open');window.speechSynthesis?.cancel();practice=null}
+
+function openZone(i){currentZone=i;const z=ZONES[i],ws=WORDS.filter(v=>v.zone===i);const learned=ws.filter(v=>state.learned.includes(v.w)).length;openModal(`${z.icon} ${z.name}`,
+ `<div class="hero-panel"><h3>情境事件</h3><p>${z.story}</p></div>
+  <div class="cards-grid">${ws.map((v)=>`<div class="mini-card"><strong>${v.w}</strong> <span class="tag">${v.pos}</span><p>${v.zh}</p><button class="speech-btn" onclick="window.WQT.speak('${esc(v.w)}')">🔊 單字</button></div>`).join('')}</div>
+  <div class="feedback"><b>區域進度：</b>已學 ${learned}/4；任務 ${state.zonePassed.includes(i)?'已完成':'尚未完成'}。<br>${z.mission}</div>`,
+ `<button class="secondary" onclick="window.WQT.zonePractice(${i})">情境練習</button><button class="primary" onclick="window.WQT.learnZone(${i})">進入教學</button>`);
+}
+function learnZone(i){currentZone=i;currentWordIndex=0;showWordCard()}
+function showWordCard(){const ws=WORDS.filter(v=>v.zone===currentZone),v=ws[currentWordIndex],globalIndex=WORDS.indexOf(v)+1,learned=state.learned.includes(v.w);openModal(`單字教學｜${ZONES[currentZone].name}`,
+ `<div class="quiz-top"><span>第 ${currentWordIndex+1} / ${ws.length} 張</span><span>${learned?'<span class="tag good">已學習</span>':'<span class="tag">未標記</span>'}</span></div>
+  <div class="word-card"><span class="num">${globalIndex}</span><div class="word-title">${v.w}</div><div class="word-meta">${v.pos}</div><div class="meaning">${v.zh}</div><div class="sentence">${v.ex}</div><div class="speech-row"><button class="speech-btn" id="speakWord">🔊 朗讀單字</button><button class="speech-btn" id="speakSentence">🔊 朗讀例句</button></div></div>
+  <div class="feedback">學習提示：先聽單字，再跟讀例句；嘗試不用看中文，用情境推測字義。</div>`,
+ `<button class="secondary" id="prevWord">上一張</button><button class="good-btn" id="markLearned">${learned?'再次複習':'標記已學'}</button><button class="primary" id="nextWord">${currentWordIndex===ws.length-1?'完成並練習':'下一張'}</button>`);
+ $('#speakWord').onclick=()=>speak(v.w);$('#speakSentence').onclick=()=>speak(v.ex);$('#prevWord').onclick=()=>{currentWordIndex=(currentWordIndex-1+ws.length)%ws.length;showWordCard()};$('#markLearned').onclick=()=>markLearned(v.w);$('#nextWord').onclick=()=>{markLearned(v.w,false);if(currentWordIndex<ws.length-1){currentWordIndex++;showWordCard()}else startPractice(currentZone,'meaning',5)};
+}
+function markLearned(word,notify=true){if(!state.learned.includes(word)){state.learned.push(word);state.xp+=8;saveState();audioTone('good');if(notify)toast(`已學會 ${word}，+8 XP`)}else if(notify)toast(`${word} 已在複習清單中`)}
+
+function practiceMenu(){openModal('反覆練習中心',
+ `<div class="hero-panel"><h3>三種練習方式</h3><p>題目會隨機重組，可不限次數練習。錯題會提高再次出現的機率。</p></div>
+  <div class="cards-grid">
+   <div class="mini-card"><strong>字義配對</strong><p>看到英文，選出正確中文意思。</p><button class="primary" onclick="window.WQT.startPractice(null,'meaning',10)">開始</button></div>
+   <div class="mini-card"><strong>情境選字</strong><p>閱讀例句，選出最適合的單字。</p><button class="primary" onclick="window.WQT.startPractice(null,'context',10)">開始</button></div>
+   <div class="mini-card"><strong>拼字挑戰</strong><p>聽發音與看中文提示，輸入完整單字。</p><button class="primary" onclick="window.WQT.startPractice(null,'spell',8)">開始</button></div>
+   <div class="mini-card"><strong>弱點複習</strong><p>優先練習目前正確率較低的單字。</p><button class="primary" onclick="window.WQT.startWeak()">開始</button></div>
+  </div>`,'<button class="secondary" onclick="window.WQT.close()">返回地圖</button>');}
+function zonePractice(i){startPractice(i,'context',5)}
+function startWeak(){const sorted=[...WORDS].sort((a,b)=>masteryRate(a.w)-masteryRate(b.w));startPractice(null,'meaning',10,sorted.slice(0,10))}
+function masteryRate(w){const m=state.mastery[w];return m&&m.t?m.c/m.t:0}
+function startPractice(zone=null,type='meaning',count=10,pool=null){test=null;const base=pool||WORDS.filter(v=>zone===null||v.zone===zone);practice={zone,type,count,index:0,score:0,items:shuffle(base).slice(0,Math.min(count,base.length)),answered:false};if(practice.items.length<count){while(practice.items.length<count)practice.items.push(base[rnd(base.length)])}showPractice()}
+function showPractice(){const p=practice,v=p.items[p.index];p.answered=false;let html=`<div class="quiz-top"><span>第 ${p.index+1}/${p.count} 題</span><span>答對 ${p.score}</span></div>`;
+ if(p.type==='meaning'){html+=`<div class="prompt">${v.w}</div><div class="speech-row"><button class="speech-btn" id="pSpeak">🔊 朗讀</button></div>${choicesHTML(v,'zh')}</div>`}
+ else if(p.type==='context'){const blank=v.ex.replace(new RegExp(v.w,'i'),'_____');html+=`<div class="prompt" style="font-size:18px">${blank}</div><div class="speech-row"><button class="speech-btn" id="pSentence">🔊 聽完整句</button></div>${choicesHTML(v,'w')}</div>`}
+ else{html+=`<div class="prompt">${v.zh}</div><div class="speech-row"><button class="speech-btn" id="pSpeak">🔊 聽單字</button></div><div class="input-row"><input id="spellInput" autocomplete="off" autocapitalize="none" placeholder="輸入英文單字"><button class="primary" id="spellSubmit">送出</button></div>`}
+ html+=`<div class="feedback" id="pFeedback">選擇或輸入答案後，系統會立即回饋。</div>`;openModal('練習任務',html,'<button class="secondary" onclick="window.WQT.practiceMenu()">結束練習</button>');
+ if($('#pSpeak'))$('#pSpeak').onclick=()=>speak(v.w);if($('#pSentence'))$('#pSentence').onclick=()=>speak(v.ex);if($('#spellSubmit')){$('#spellSubmit').onclick=()=>checkSpell(v);$('#spellInput').addEventListener('keydown',e=>{if(e.key==='Enter')checkSpell(v)});setTimeout(()=>$('#spellInput')?.focus(),100)}
+}
+function choicesHTML(v,field){let others=shuffle(WORDS.filter(x=>x.w!==v.w)).slice(0,3),opts=shuffle([v,...others]);return `<div class="choice-grid">${opts.map(o=>`<button class="choice" data-answer="${esc(o.w)}">${field==='zh'?o.zh:o.w}</button>`).join('')}</div>`}
+function bindChoices(correct){$$('.choice').forEach(b=>b.onclick=()=>checkChoice(b,b.dataset.answer===correct,correct))}
+function checkChoice(btn,ok,correct){if(practice?.answered)return;practice.answered=true;$$('.choice').forEach(b=>{b.disabled=true;if(b.dataset.answer===correct)b.classList.add('correct')});if(!ok)btn.classList.add('wrong');finishPracticeAnswer(correct,ok)}
+function checkSpell(v){if(practice.answered)return;const input=$('#spellInput'),ans=input.value.trim().toLowerCase();practice.answered=true;const ok=ans===v.w.toLowerCase();input.disabled=true;finishPracticeAnswer(v.w,ok,`正確拼字：${v.w}`)}
+function finishPracticeAnswer(word,ok,extra=''){
+ state.practiceTotal++;if(ok){state.practiceCorrect++;practice.score++;state.xp+=5;audioTone('good')}else audioTone('bad');const m=state.mastery[word]||{c:0,t:0};m.t++;if(ok)m.c++;state.mastery[word]=m;saveState();const f=$('#pFeedback');f.className='feedback '+(ok?'good':'bad');f.innerHTML=ok?`答對了！+5 XP ${extra}`:`再試一次前先記住：<b>${word}</b>。${extra}`;
+ $('#modalFoot').innerHTML=`<button class="primary" id="nextPractice">${practice.index===practice.count-1?'查看結果':'下一題'}</button>`;$('#nextPractice').onclick=()=>{practice.index++;if(practice.index>=practice.count)practiceResult();else showPractice()};
+}
+function practiceResult(){const p=practice,pct=Math.round(p.score/p.count*100);if(p.zone!==null&&pct>=60&&!state.zonePassed.includes(p.zone)){state.zonePassed.push(p.zone);state.xp+=30;saveState();audioTone('good')}openModal('練習完成',`<div class="result-ring" style="--pct:${pct}%"><b>${pct}%</b></div><div class="hero-panel"><h3>${pct>=80?'表現優秀！':pct>=60?'任務通過！':'需要再練習'}</h3><p>本次答對 ${p.score}/${p.count} 題。${p.zone!==null&&pct>=60?'本區情境任務已完成，獲得 30 XP。':''}</p></div>`,`<button class="secondary" onclick="window.WQT.practiceMenu()">再練一次</button><button class="primary" onclick="window.WQT.close()">返回地圖</button>`)}
+
+function testMenu(){openModal('總測驗中心',`<div class="hero-panel"><h3>城市語言能源檢定</h3><p>共 12 題，混合字義、情境與拼字題。每題作答後才會顯示回饋；達到教師設定的 ${state.teacherGoal}% 即通過。</p></div><div class="dashboard-grid"><div class="metric"><b>${state.testCount}</b><span>測驗次數</span></div><div class="metric"><b>${state.bestScore}%</b><span>最高分</span></div><div class="metric"><b>${state.lastScore}%</b><span>最近成績</span></div><div class="metric"><b>${state.teacherGoal}%</b><span>通過標準</span></div></div>`,`<button class="primary" onclick="window.WQT.startTest()">開始測驗</button>`)}
+function startTest(){practice=null;const items=shuffle(WORDS).slice(0,12).map((v,i)=>({v,type:i%4===3?'spell':i%2?'context':'meaning'}));test={items,index:0,score:0,answered:false};showTest()}
+function showTest(){const q=test.items[test.index],v=q.v;test.answered=false;let html=`<div class="quiz-top"><span>第 ${test.index+1}/12 題</span><span>目前得分 ${test.score}</span></div>`;if(q.type==='meaning')html+=`<div class="prompt">${v.w}</div>${testChoices(v,'zh')}`;else if(q.type==='context')html+=`<div class="prompt" style="font-size:18px">${v.ex.replace(new RegExp(v.w,'i'),'_____')}</div>${testChoices(v,'w')}`;else html+=`<div class="prompt">${v.zh}</div><div class="speech-row"><button class="speech-btn" id="tSpeak">🔊 聽發音</button></div><div class="input-row"><input id="tInput" autocomplete="off" autocapitalize="none"><button class="primary" id="tSubmit">送出</button></div>`;html+=`<div class="feedback" id="tFeedback">請完成本題。</div>`;openModal('城市總測驗',html,'<button class="secondary" onclick="window.WQT.testMenu()">中止測驗</button>');if(q.type!=='spell')bindTestChoices(v.w);else{$('#tSpeak').onclick=()=>speak(v.w);$('#tSubmit').onclick=()=>checkTestSpell(v);$('#tInput').addEventListener('keydown',e=>e.key==='Enter'&&checkTestSpell(v));setTimeout(()=>$('#tInput')?.focus(),100)}}
+function testChoices(v,field){let opts=shuffle([v,...shuffle(WORDS.filter(x=>x.w!==v.w)).slice(0,3)]);return `<div class="choice-grid">${opts.map(o=>`<button class="choice" data-answer="${esc(o.w)}">${field==='zh'?o.zh:o.w}</button>`).join('')}</div>`}
+function bindTestChoices(correct){$$('.choice').forEach(b=>b.onclick=()=>{if(test.answered)return;test.answered=true;const ok=b.dataset.answer===correct;$$('.choice').forEach(x=>{x.disabled=true;if(x.dataset.answer===correct)x.classList.add('correct')});if(!ok)b.classList.add('wrong');finishTest(ok,correct)})}
+function checkTestSpell(v){if(test.answered)return;test.answered=true;const ok=$('#tInput').value.trim().toLowerCase()===v.w;$('#tInput').disabled=true;finishTest(ok,v.w)}
+function finishTest(ok,correct){if(ok){test.score++;audioTone('good')}else audioTone('bad');const f=$('#tFeedback');f.className='feedback '+(ok?'good':'bad');f.innerHTML=ok?'答對了！':`正確答案：<b>${correct}</b>`;$('#modalFoot').innerHTML=`<button class="primary" id="nextTest">${test.index===11?'完成測驗':'下一題'}</button>`;$('#nextTest').onclick=()=>{test.index++;if(test.index>=12)testResult();else showTest()}}
+function testResult(){const pct=Math.round(test.score/12*100);state.testCount++;state.lastScore=pct;state.bestScore=Math.max(state.bestScore,pct);state.xp+=test.score*4;if(pct>=state.teacherGoal)state.events.push({type:'test-pass',date:new Date().toISOString(),score:pct});saveState();openModal('測驗結果',`<div class="result-ring" style="--pct:${pct}%"><b>${pct}%</b></div><div class="hero-panel"><h3>${pct>=state.teacherGoal?'檢定通過！':'尚未達標'}</h3><p>答對 ${test.score}/12 題，通過標準為 ${state.teacherGoal}%。${pct>=state.teacherGoal?'城市語言能源已穩定恢復。':'建議先進入弱點複習，再次挑戰。'}</p></div>`,`<button class="secondary" onclick="window.WQT.practiceMenu()">弱點練習</button><button class="primary" onclick="window.WQT.testMenu()">再次測驗</button>`)}
+
+function dashboard(){const acc=state.practiceTotal?Math.round(state.practiceCorrect/state.practiceTotal*100):0;const rows=WORDS.map((v,i)=>{const m=state.mastery[v.w]||{c:0,t:0},rate=m.t?Math.round(m.c/m.t*100):0;return `<tr><td>${i+1}. ${v.w}</td><td>${state.learned.includes(v.w)?'<span class="tag good">已學</span>':'<span class="tag">未學</span>'}</td><td>${m.c}/${m.t}</td><td>${rate}%</td></tr>`}).join('');openModal('學習歷程儀表板',`<div class="dashboard-grid"><div class="metric"><b>${state.learned.length}/24</b><span>已學單字</span></div><div class="metric"><b>${acc}%</b><span>練習正確率</span></div><div class="metric"><b>${state.bestScore}%</b><span>測驗最高分</span></div><div class="metric"><b>${Math.floor(state.timeSec/60)}</b><span>累計分鐘</span></div></div><div style="max-height:390px;overflow:auto"><table><thead><tr><th>單字</th><th>狀態</th><th>答對/作答</th><th>熟練度</th></tr></thead><tbody>${rows}</tbody></table></div>`,`<button class="secondary" onclick="window.WQT.exportCSV()">下載 CSV</button><button class="primary" onclick="window.WQT.close()">完成</button>`,true)}
+function teacherMode(){if(!teacherUnlocked){openModal('教師模式登入',`<div class="hero-panel"><h3>教師控制台</h3><p>示範版密碼：<b>WORD24</b>。教師可查看全班示範資料格式、調整通過標準、匯出紀錄與重設本機資料。</p></div><div class="input-row"><input id="teacherPass" type="password" placeholder="輸入教師密碼"><button class="primary" id="teacherLogin">登入</button></div><div class="feedback" id="teacherFeedback">資料只儲存在目前瀏覽器，不會上傳網路。</div>`);$('#teacherLogin').onclick=()=>{if($('#teacherPass').value==='WORD24'){teacherUnlocked=true;teacherPanel()}else{$('#teacherFeedback').className='feedback bad';$('#teacherFeedback').textContent='密碼不正確。'}};return}teacherPanel()}
+function teacherPanel(){openModal('教師控制台',`<div class="teacher-panel"><div class="teacher-box"><h3>評量設定</h3><label>總測驗通過標準（%）</label><input id="goalInput" type="number" min="50" max="100" value="${state.teacherGoal}"><button class="primary" id="saveGoal" style="margin-top:9px">儲存標準</button></div><div class="teacher-box"><h3>課堂建議</h3><label>建議流程</label><select id="flowSelect"><option>15 分鐘：教學＋快速練習</option><option>30 分鐘：三區任務</option><option>50 分鐘：完整六區＋測驗</option></select><p>教師可投影地圖，指定學生分組完成不同區域，再交換成果。</p></div><div class="teacher-box"><h3>資料匯出</h3><p>JSON 適合備份與重新匯入；CSV 適合用 Excel 分析。</p><button class="secondary" onclick="window.WQT.exportJSON()">下載 JSON</button> <button class="secondary" onclick="window.WQT.exportCSV()">下載 CSV</button></div><div class="teacher-box"><h3>管理資料</h3><p>清除後無法復原，請先匯出備份。</p><button class="danger" onclick="window.WQT.resetData()">重設本機紀錄</button></div></div>`,`<button class="primary" onclick="window.WQT.close()">關閉</button>`,true);$('#saveGoal').onclick=()=>{state.teacherGoal=clamp(parseInt($('#goalInput').value)||80,50,100);saveState();toast('通過標準已更新')}}
+function exportJSON(){download('word-quest-record.json',JSON.stringify(state,null,2),'application/json')}
+function exportCSV(){let lines=['word,learned,correct,total,accuracy'];WORDS.forEach(v=>{const m=state.mastery[v.w]||{c:0,t:0};lines.push([v.w,state.learned.includes(v.w)?1:0,m.c,m.t,m.t?Math.round(m.c/m.t*100):0].join(','))});lines.push('');lines.push(`summary,value`,`xp,${state.xp}`,`practice_accuracy,${state.practiceTotal?Math.round(state.practiceCorrect/state.practiceTotal*100):0}`,`best_test_score,${state.bestScore}`,`completed_zones,${state.zonePassed.length}`,`time_minutes,${Math.floor(state.timeSec/60)}`);download('word-quest-record.csv','\ufeff'+lines.join('\n'),'text/csv;charset=utf-8')}
+function download(name,text,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+function resetData(){if(confirm('確定要清除所有學習紀錄嗎？')){localStorage.removeItem(STORAGE);state=defaultState();state.sessions=1;saveState();teacherUnlocked=false;closeModal();toast('學習紀錄已重設')}}
+function mapOverview(){openModal('任務城區域地圖',`<div class="cards-grid">${ZONES.map((z,i)=>`<div class="mini-card"><strong>${z.icon} ${z.name}</strong><p>${z.story}</p><button class="secondary" onclick="window.WQT.jump(${i})">前往區域</button></div>`).join('')}</div>`,'<button class="primary" onclick="window.WQT.close()">關閉</button>',true)}
+function jump(i){const z=ZONES[i];player.x=z.x+z.w/2;player.y=z.y+z.h/2+90;centerCamera();closeModal();toast(`已前往 ${z.name}`)}
+function help(){openModal('操作與學習說明',`<div class="cards-grid"><div class="mini-card"><strong>移動與探索</strong><p>鍵盤使用 WASD／方向鍵；手機使用左下方向鍵。接近發光終端後按互動。</p></div><div class="mini-card"><strong>自主學習</strong><p>每張單字卡可朗讀單字與例句。標記已學後可進入練習。</p></div><div class="mini-card"><strong>反覆練習</strong><p>字義、情境與拼字題可不限次數重做，並記錄各字正確率。</p></div><div class="mini-card"><strong>測驗與紀錄</strong><p>12 題混合測驗；儀表板顯示完成度、正確率、最高分與時間。</p></div></div>`,`<button class="primary" onclick="window.WQT.close()">知道了</button>`)}
+function esc(s){return String(s).replace(/'/g,"\\'").replace(/"/g,'&quot;')}
+
+// Global callbacks for generated HTML
+window.WQT={speak,openZone,learnZone,zonePractice,startPractice,startWeak,practiceMenu,testMenu,startTest,dashboard,teacherMode,close:closeModal,exportJSON,exportCSV,resetData,jump};
+
+// Bind static UI
+window.addEventListener('resize',resize);window.addEventListener('orientationchange',()=>setTimeout(resize,180));resize();
+$('#closeModal').onclick=closeModal;$('#modal').addEventListener('click',e=>{if(e.target===$('#modal'))closeModal()});
+$('#interactBtn').onclick=()=>near!==null&&openZone(near);$('#centerBtn').onclick=centerCamera;$('#mapBtn').onclick=mapOverview;$('#helpBtn').onclick=help;$('#quickPractice').onclick=practiceMenu;$('#dashboardBtn').onclick=dashboard;
+$('#soundToggle').onclick=()=>{state.sound=!state.sound;saveState();toast(state.sound?'音效已開啟':'音效已關閉')};
+$('#startBtn').onclick=()=>{state.introSeen=true;saveState();$('#intro').classList.add('hidden');audioTone('good')};if(state.introSeen)$('#intro').classList.add('hidden');
+$$('.bottom-nav button').forEach(b=>b.onclick=()=>{$$('.bottom-nav button').forEach(x=>x.classList.remove('active'));b.classList.add('active');const n=b.dataset.nav;if(n==='map'){closeModal()}if(n==='learn')openZone(state.zonePassed.length<6?state.zonePassed.length:0);if(n==='practice')practiceMenu();if(n==='test')testMenu();if(n==='record')dashboard();if(n==='teacher')teacherMode()});
+$$('.dpad button').forEach(b=>{const dir=b.dataset.dir;const on=e=>{e.preventDefault();keys[dir]=true;b.classList.add('active')},off=e=>{e.preventDefault();keys[dir]=false;b.classList.remove('active')};b.addEventListener('pointerdown',on);b.addEventListener('pointerup',off);b.addEventListener('pointercancel',off);b.addEventListener('pointerleave',off)});
+const mapKey={ArrowUp:'up',w:'up',W:'up',ArrowDown:'down',s:'down',S:'down',ArrowLeft:'left',a:'left',A:'left',ArrowRight:'right',d:'right',D:'right'};
+window.addEventListener('keydown',e=>{if($('#modal').classList.contains('open')&&e.key!=='Escape')return;if(mapKey[e.key]){keys[mapKey[e.key]]=true;e.preventDefault()}if(e.code==='Space'&&near!==null){openZone(near);e.preventDefault()}if(e.key==='Escape')closeModal()});window.addEventListener('keyup',e=>{if(mapKey[e.key])keys[mapKey[e.key]]=false});
+setInterval(()=>saveState(),30000);updateUI();requestAnimationFrame(loop);
+// Bind choices after every modal render via event delegation
+$('#modalBody').addEventListener('click',e=>{const b=e.target.closest('.choice');if(!b)return;if(practice&&!test)checkChoice(b,b.dataset.answer===practice.items[practice.index].w,practice.items[practice.index].w)});
+})();
+</script>
+</body>
+</html>
